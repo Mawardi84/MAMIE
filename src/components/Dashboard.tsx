@@ -91,6 +91,7 @@ export default function Dashboard() {
     commodities: 'text-orange-400',
     indices: 'text-emerald-400',
     stocks: 'text-cyan-400',
+    bonds: 'text-indigo-400',
   };
 
   return (

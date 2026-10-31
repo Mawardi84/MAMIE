@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AssetProvider } from './context/AssetContext';
-import Dashboard from './components/Dashboard';
+import TradingTerminal from './components/TradingTerminal';
 import LiquidityPanel from './components/LiquidityPanel';
 import OrderFlowPanel from './components/OrderFlowPanel';
 import ComexSpotPanel from './components/ComexSpotPanel';
@@ -39,7 +39,7 @@ export default function App() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'dashboard': return <Dashboard />;
+      case 'dashboard': return <TradingTerminal />;
       case 'liquidity': return <LiquidityPanel />;
       case 'orderflow': return <OrderFlowPanel />;
       case 'comex': return <ComexSpotPanel />;
@@ -47,7 +47,7 @@ export default function App() {
       case 'backtest': return <BacktestPanel />;
       case 'ai': return <AIEnginePanel />;
       case 'datasources': return <DataSourcesPanel />;
-      default: return <Dashboard />;
+      default: return <TradingTerminal />;
     }
   };
 
@@ -74,10 +74,10 @@ export default function App() {
         <div className="p-4 border-b border-gray-800">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-amber-600 rounded-lg flex items-center justify-center">
-              <span className="text-sm font-bold text-gray-900">Au</span>
+              <span className="text-sm font-bold text-gray-900">Q</span>
             </div>
             <div>
-              <h2 className="text-sm font-bold text-white">XAU/USD</h2>
+              <h2 className="text-sm font-bold text-white">Multi-Asset</h2>
               <p className="text-xs text-gray-400">Quant Research</p>
             </div>
           </div>

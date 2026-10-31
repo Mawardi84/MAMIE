@@ -1,5 +1,5 @@
 // Real-time data fetching services for XAU/USD research
-// Using free public APIs
+// Using free public APIs with multiple CORS proxy fallbacks
 
 export interface PriceData {
   timestamp: number;
@@ -30,69 +30,126 @@ export interface MacroData {
   value: number;
 }
 
+// CORS Proxy options (fallback chain - most reliable first)
+const CORS_PROXIES = [
+  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+];
+
+// Fetch with CORS proxy fallback
+async function fetchWithProxy(url: string, options: RequestInit = {}): Promise<Response> {
+  // Try direct fetch first
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    
+    const response = await fetch(url, { 
+      ...options,
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    
+    if (response.ok) {
+      return response;
+    }
+  } catch (e) {
+    console.log('Direct fetch failed, trying CORS proxies...');
+  }
+
+  // Try each CORS proxy
+  for (let i = 0; i < CORS_PROXIES.length; i++) {
+    const proxyBuilder = CORS_PROXIES[i];
+    try {
+      const proxyUrl = proxyBuilder(url);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch(proxyUrl, {
+        ...options,
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        console.log(`✓ Fetched via proxy ${i + 1}`);
+        return response;
+      }
+    } catch (e) {
+      console.log(`Proxy ${i + 1} failed, trying next...`);
+      continue;
+    }
+  }
+
+  throw new Error('All fetch attempts failed. Please check your internet connection.');
+}
+
+// Parse JSON safely
+async function safeJson(response: Response): Promise<any> {
+  const text = await response.text();
+  try {
+    return JSON.parse(text);
+  } catch (e) {
+    throw new Error('Invalid JSON response from API');
+  }
+}
+
 // Yahoo Finance API for Gold prices
 export async function fetchGoldPriceData(
   symbol: string = 'GC=F',
   range: string = '1mo',
   interval: string = '1d'
 ): Promise<PriceData[]> {
-  try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`Yahoo Finance API error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    const result = data.chart.result[0];
-    const timestamps = result.timestamp;
-    const quotes = result.indicators.quote[0];
-    
-    return timestamps.map((timestamp: number, index: number) => ({
-      timestamp,
-      date: new Date(timestamp * 1000).toISOString().split('T')[0],
-      open: quotes.open[index] || 0,
-      high: quotes.high[index] || 0,
-      low: quotes.low[index] || 0,
-      close: quotes.close[index] || 0,
-      volume: quotes.volume[index] || 0,
-    })).filter((d: PriceData) => d.close > 0);
-  } catch (error) {
-    console.error('Error fetching gold price data:', error);
-    throw error;
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
+  const response = await fetchWithProxy(url);
+  const data = await safeJson(response);
+  
+  if (!data.chart || !data.chart.result || data.chart.result.length === 0) {
+    throw new Error('Invalid response format from Yahoo Finance');
   }
+  
+  const result = data.chart.result[0];
+  const timestamps = result.timestamp;
+  const quotes = result.indicators.quote[0];
+  
+  return timestamps.map((timestamp: number, index: number) => ({
+    timestamp,
+    date: new Date(timestamp * 1000).toISOString().split('T')[0],
+    open: quotes.open[index] || 0,
+    high: quotes.high[index] || 0,
+    low: quotes.low[index] || 0,
+    close: quotes.close[index] || 0,
+    volume: quotes.volume[index] || 0,
+  })).filter((d: PriceData) => d.close > 0);
 }
 
 // Fetch real-time gold spot price
 export async function fetchGoldSpotPrice(): Promise<{ price: number; change: number; changePercent: number }> {
-  try {
-    const url = 'https://query1.finance.yahoo.com/v8/finance/chart/XAUUSD=X?interval=1m&range=1d';
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    const result = data.chart.result[0];
-    const meta = result.meta;
-    const quotes = result.indicators.quote[0];
-    
-    const currentPrice = meta.regularMarketPrice;
-    const previousClose = meta.chartPreviousClose || meta.previousClose;
-    const change = currentPrice - previousClose;
-    const changePercent = (change / previousClose) * 100;
-    
-    return {
-      price: currentPrice,
-      change,
-      changePercent,
-    };
-  } catch (error) {
-    console.error('Error fetching gold spot price:', error);
-    throw error;
+  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/GC=F?interval=1d&range=2d';
+  const response = await fetchWithProxy(url);
+  const data = await safeJson(response);
+  
+  if (!data.chart || !data.chart.result || data.chart.result.length === 0) {
+    throw new Error('Invalid response format');
   }
+  
+  const result = data.chart.result[0];
+  const meta = result.meta;
+  const quotes = result.indicators.quote[0];
+  
+  // Get latest close price
+  const closes = quotes.close.filter((c: number | null) => c !== null);
+  const currentPrice = closes[closes.length - 1] || meta.regularMarketPrice;
+  const previousClose = closes.length > 1 ? closes[closes.length - 2] : meta.chartPreviousClose;
+  
+  const change = currentPrice - previousClose;
+  const changePercent = previousClose > 0 ? (change / previousClose) * 100 : 0;
+  
+  return {
+    price: currentPrice,
+    change,
+    changePercent,
+  };
 }
 
 // CFTC COT Reports API
@@ -100,61 +157,42 @@ export async function fetchCOTData(
   commodity: string = 'GOLD',
   limit: number = 52
 ): Promise<COTData[]> {
-  try {
-    // CFTC public reporting API
-    const url = `https://publicreporting.cftc.gov/resource/6dca-aqww.json?$where=commodity=%27${commodity}%27&$limit=${limit}&$order=report_date_as_yyyymmdd+DESC`;
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`CFTC API error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    return data.map((item: any) => ({
-      date: item.report_date_as_yyyymmdd,
-      reportType: item.report_type_description,
-      marketAndExchangeNames: item.market_and_exchange_names,
-      nonCommercialLong: parseInt(item.noncomm_positions_long_all) || 0,
-      nonCommercialShort: parseInt(item.noncomm_positions_short_all) || 0,
-      nonCommercialSpreading: parseInt(item.noncomm_position_spreading) || 0,
-      commercialLong: parseInt(item.comm_positions_long_all) || 0,
-      commercialShort: parseInt(item.comm_positions_short_all) || 0,
-      commercialSpreading: parseInt(item.comm_position_spreading) || 0,
-      totalLong: parseInt(item.tot_report_positions_long) || 0,
-      totalShort: parseInt(item.tot_report_positions_short) || 0,
-    }));
-  } catch (error) {
-    console.error('Error fetching COT data:', error);
-    throw error;
-  }
+  const url = `https://publicreporting.cftc.gov/resource/6dca-aqww.json?$where=commodity=%27${commodity}%27&$limit=${limit}&$order=report_date_as_yyyymmdd+DESC`;
+  
+  const response = await fetchWithProxy(url);
+  const data = await safeJson(response);
+  
+  return data.map((item: any) => ({
+    date: item.report_date_as_yyyymmdd || item.report_date || '',
+    reportType: item.report_type_description || 'Disaggregated',
+    marketAndExchangeNames: item.market_and_exchange_names || 'COMEX Gold',
+    nonCommercialLong: parseInt(item.noncomm_positions_long_all) || 0,
+    nonCommercialShort: parseInt(item.noncomm_positions_short_all) || 0,
+    nonCommercialSpreading: parseInt(item.noncomm_position_spreading) || 0,
+    commercialLong: parseInt(item.comm_positions_long_all) || 0,
+    commercialShort: parseInt(item.comm_positions_short_all) || 0,
+    commercialSpreading: parseInt(item.comm_position_spreading) || 0,
+    totalLong: parseInt(item.tot_report_positions_long) || 0,
+    totalShort: parseInt(item.tot_report_positions_short) || 0,
+  }));
 }
 
-// FRED API for macroeconomic data (requires free API key)
+// FRED API for macroeconomic data
 export async function fetchFREDData(
   seriesId: string,
   apiKey: string = 'DEMO_KEY'
 ): Promise<MacroData[]> {
-  try {
-    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${apiKey}&file_type=json&sort_order=desc&limit=100`;
-    const response = await fetch(url);
-    
-    if (!response.ok) {
-      throw new Error(`FRED API error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    return data.observations
-      .filter((obs: any) => obs.value !== '.')
-      .map((obs: any) => ({
-        date: obs.date,
-        value: parseFloat(obs.value),
-      }));
-  } catch (error) {
-    console.error('Error fetching FRED data:', error);
-    throw error;
-  }
+  const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${apiKey}&file_type=json&sort_order=desc&limit=100`;
+  
+  const response = await fetchWithProxy(url);
+  const data = await safeJson(response);
+  
+  return data.observations
+    .filter((obs: any) => obs.value !== '.')
+    .map((obs: any) => ({
+      date: obs.date,
+      value: parseFloat(obs.value),
+    }));
 }
 
 // Fetch DXY (US Dollar Index)
@@ -182,7 +220,11 @@ export function calculateRealizedVolatility(prices: PriceData[], window: number 
   const returns: number[] = [];
   
   for (let i = 1; i < prices.length; i++) {
-    returns.push(Math.log(prices[i].close / prices[i - 1].close));
+    if (prices[i].close > 0 && prices[i - 1].close > 0) {
+      returns.push(Math.log(prices[i].close / prices[i - 1].close));
+    } else {
+      returns.push(0);
+    }
   }
   
   const volatility: number[] = [];
@@ -196,7 +238,7 @@ export function calculateRealizedVolatility(prices: PriceData[], window: number 
     const windowReturns = returns.slice(i - window + 1, i + 1);
     const mean = windowReturns.reduce((a, b) => a + b, 0) / window;
     const variance = windowReturns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (window - 1);
-    const dailyVol = Math.sqrt(variance);
+    const dailyVol = Math.sqrt(Math.max(0, variance));
     const annualizedVol = dailyVol * Math.sqrt(252) * 100;
     
     volatility.push(annualizedVol);
@@ -207,8 +249,14 @@ export function calculateRealizedVolatility(prices: PriceData[], window: number 
 
 // Calculate correlation between two price series
 export function calculateCorrelation(series1: PriceData[], series2: PriceData[]): number {
-  const returns1 = series1.slice(1).map((p, i) => Math.log(p.close / series1[i].close));
-  const returns2 = series2.slice(1).map((p, i) => Math.log(p.close / series2[i].close));
+  if (series1.length < 2 || series2.length < 2) return 0;
+  
+  const returns1 = series1.slice(1).map((p, i) => 
+    p.close > 0 && series1[i].close > 0 ? Math.log(p.close / series1[i].close) : 0
+  );
+  const returns2 = series2.slice(1).map((p, i) => 
+    p.close > 0 && series2[i].close > 0 ? Math.log(p.close / series2[i].close) : 0
+  );
   
   const n = Math.min(returns1.length, returns2.length);
   const r1 = returns1.slice(0, n);
@@ -229,7 +277,8 @@ export function calculateCorrelation(series1: PriceData[], series2: PriceData[])
     denom2 += diff2 * diff2;
   }
   
-  return numerator / Math.sqrt(denom1 * denom2);
+  const denominator = Math.sqrt(denom1 * denom2);
+  return denominator === 0 ? 0 : numerator / denominator;
 }
 
 // Cache utility
@@ -252,4 +301,21 @@ export async function cachedFetch<T>(
   cache.set(key, { data, timestamp: now });
   
   return data;
+}
+
+// Test connection
+export async function testConnection(): Promise<{ success: boolean; message: string; price?: number }> {
+  try {
+    const response = await fetchGoldSpotPrice();
+    return { 
+      success: true, 
+      message: `Connected! Gold: $${response.price.toFixed(2)}`,
+      price: response.price,
+    };
+  } catch (error) {
+    return { 
+      success: false, 
+      message: error instanceof Error ? error.message : 'Connection failed' 
+    };
+  }
 }

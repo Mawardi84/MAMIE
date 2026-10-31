@@ -21,6 +21,7 @@ import MicrostructurePanel from './components/MicrostructurePanel';
 import MacroPanel from './components/MacroPanel';
 import PositioningPanel from './components/PositioningPanel';
 import QuantResearchPanel from './components/QuantResearchPanel';
+import RiskGovernancePanel from './components/RiskGovernancePanel';
 
 export default function App() {
   const [activePage, setActivePage] = useState('executive-dashboard');
@@ -63,6 +64,10 @@ export default function App() {
         return <ComexSpotPanel />;
       case 'orderflow':
         return <OrderFlowPanel />;
+      case 'risk-monitor':
+      case 'risk-analytics':
+      case 'model-governance':
+        return <RiskGovernancePanel />;
       default:
         return <ExecutiveDashboard />;
     }

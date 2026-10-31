@@ -1,5 +1,8 @@
 import { useState } from 'react';
 import { AssetProvider } from './context/AssetContext';
+import InstitutionalSidebar from './components/InstitutionalSidebar';
+import InstitutionalTopBar from './components/InstitutionalTopBar';
+import ExecutiveDashboard from './components/ExecutiveDashboard';
 import TradingTerminal from './components/TradingTerminal';
 import TickerTape from './components/TickerTape';
 import LiquidityPanel from './components/LiquidityPanel';
@@ -14,197 +17,79 @@ import InstrumentRegistryPanel from './components/InstrumentRegistryPanel';
 import IndonesianEquityPanel from './components/IndonesianEquityPanel';
 import MultiAssetIntelligencePanel from './components/MultiAssetIntelligencePanel';
 import AIResearchPanel from './components/AIResearchPanel';
-import {
-  LayoutDashboard,
-  Droplets,
-  GitBranch,
-  Repeat,
-  BarChart3,
-  FlaskConical,
-  Brain,
-  Database,
-  Menu,
-  X,
-  ChevronRight,
-  Settings,
-  Shield,
-  Building2,
-  Globe,
-  Sparkles,
-} from 'lucide-react';
-
-const navItems = [
-  { id: 'dashboard', label: 'Trading Terminal', icon: LayoutDashboard },
-  { id: 'liquidity', label: 'Liquidity Analysis', icon: Droplets },
-  { id: 'orderflow', label: 'Order Flow', icon: GitBranch },
-  { id: 'comex', label: 'COMEX ↔ Spot', icon: Repeat },
-  { id: 'probability', label: 'Probability Models', icon: BarChart3 },
-  { id: 'backtest', label: 'Backtesting', icon: FlaskConical },
-  { id: 'ai', label: 'AI Engine', icon: Brain },
-  { id: 'airesearch', label: 'AI Research', icon: Sparkles },
-  { id: 'datasources', label: 'Data Sources', icon: Database },
-  { id: 'integrity', label: 'Data Integrity', icon: Shield },
-  { id: 'registry', label: 'Instrument Registry', icon: Settings },
-  { id: 'idx', label: 'Indonesian Equity', icon: Building2 },
-  { id: 'multiasset', label: 'Multi-Asset Intel', icon: Globe },
-];
+import MicrostructurePanel from './components/MicrostructurePanel';
+import MacroPanel from './components/MacroPanel';
+import PositioningPanel from './components/PositioningPanel';
+import QuantResearchPanel from './components/QuantResearchPanel';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activePage, setActivePage] = useState('executive-dashboard');
 
   const renderContent = () => {
-    switch (activeTab) {
-      case 'dashboard': return <TradingTerminal />;
-      case 'liquidity': return <LiquidityPanel />;
-      case 'orderflow': return <OrderFlowPanel />;
-      case 'comex': return <ComexSpotPanel />;
-      case 'probability': return <ProbabilityPanel />;
-      case 'backtest': return <BacktestPanel />;
-      case 'ai': return <AIEnginePanel />;
-      case 'airesearch': return <AIResearchPanel />;
-      case 'datasources': return <DataSourcesPanel />;
-      case 'integrity': return <DataSourcePanel />;
-      case 'registry': return <InstrumentRegistryPanel />;
-      case 'idx': return <IndonesianEquityPanel />;
-      case 'multiasset': return <MultiAssetIntelligencePanel />;
-      default: return <TradingTerminal />;
+    switch (activePage) {
+      case 'executive-dashboard':
+        return <ExecutiveDashboard />;
+      case 'market-terminal':
+        return <TradingTerminal />;
+      case 'microstructure':
+        return <MicrostructurePanel />;
+      case 'liquidity':
+        return <LiquidityPanel />;
+      case 'macro':
+        return <MacroPanel />;
+      case 'positioning':
+        return <PositioningPanel />;
+      case 'quant':
+        return <QuantResearchPanel />;
+      case 'probability':
+        return <ProbabilityPanel />;
+      case 'backtest':
+        return <BacktestPanel />;
+      case 'ai':
+        return <AIEnginePanel />;
+      case 'ai-research':
+        return <AIResearchPanel />;
+      case 'data-sources':
+        return <DataSourcesPanel />;
+      case 'data-quality':
+        return <DataSourcePanel />;
+      case 'registry':
+        return <InstrumentRegistryPanel />;
+      case 'idx-equities':
+        return <IndonesianEquityPanel />;
+      case 'multiasset':
+        return <MultiAssetIntelligencePanel />;
+      case 'comex':
+        return <ComexSpotPanel />;
+      case 'orderflow':
+        return <OrderFlowPanel />;
+      default:
+        return <ExecutiveDashboard />;
     }
   };
 
   return (
     <AssetProvider>
-      <div className="min-h-screen bg-[#0a0e17] text-white flex">
-        {/* Mobile overlay */}
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
+      <div className="min-h-screen bg-[var(--color-bg-primary)]">
+        {/* Institutional Sidebar */}
+        <InstitutionalSidebar 
+          activePage={activePage} 
+          onPageChange={setActivePage} 
+        />
 
-        {/* Sidebar */}
-        <aside className={`
-          fixed lg:static inset-y-0 left-0 z-50
-          w-72 bg-gray-900/80 backdrop-blur-xl border-r border-gray-800/50
-          transform transition-transform duration-300 ease-in-out
-          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          flex flex-col
-        `}>
-          {/* Logo */}
-          <div className="p-6 border-b border-gray-800/50">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl gold-accent flex items-center justify-center pulse-gold">
-                <span className="text-lg font-bold text-gray-900">Q</span>
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gradient-gold">Multi-Asset</h2>
-                <p className="text-xs text-gray-400">Quantitative Research</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {navItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActiveTab(item.id);
-                  setSidebarOpen(false);
-                }}
-                className={`
-                  w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all duration-200
-                  ${activeTab === item.id
-                    ? 'bg-gradient-to-r from-amber-500/20 to-transparent border border-amber-500/30 text-amber-400 shadow-lg shadow-amber-500/10'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50 border border-transparent'
-                  }
-                `}
-              >
-                <item.icon className="w-5 h-5 flex-shrink-0" />
-                <span className="text-sm font-medium">{item.label}</span>
-                {activeTab === item.id && (
-                  <ChevronRight className="w-4 h-4 ml-auto text-amber-400" />
-                )}
-              </button>
-            ))}
-          </nav>
-
-          {/* Footer */}
-          <div className="p-4 border-t border-gray-800/50">
-            <div className="premium-card p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                <span className="text-xs text-gray-300 font-semibold">System Status</span>
-              </div>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-xs text-gray-500">Data Feed</span>
-                  <span className="text-xs text-emerald-400 font-medium">Connected</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-xs text-gray-500">Assets</span>
-                  <span className="text-xs text-emerald-400 font-medium">60+ Active</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-xs text-gray-500">Last Sync</span>
-                  <span className="text-xs text-gray-400 font-mono">{new Date().toLocaleTimeString()}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1 flex flex-col min-h-screen overflow-hidden">
-          {/* Top Bar */}
-          <header className="sticky top-0 z-30 bg-gray-900/30 backdrop-blur-xl border-b border-gray-800/50 px-6 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className="lg:hidden p-2 text-gray-400 hover:text-white rounded-lg hover:bg-gray-800/50 transition-colors"
-                >
-                  {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                </button>
-                <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500">
-                  <span>Research</span>
-                  <ChevronRight className="w-3 h-3" />
-                  <span className="text-gradient-gold font-semibold">
-                    {navItems.find(n => n.id === activeTab)?.label}
-                  </span>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="hidden md:flex items-center gap-2 px-4 py-2 premium-card">
-                  <span className="text-gray-400 text-xs">Multi-Asset</span>
-                  <span className="text-gray-600">|</span>
-                  <span className="text-amber-400 text-xs font-bold">60+ Assets</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-2 premium-card">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                  <span className="text-gray-400 text-xs font-medium">Live Data</span>
-                </div>
-              </div>
-            </div>
-          </header>
+        {/* Main Content Area */}
+        <div className="ml-64">
+          {/* Institutional Top Bar */}
+          <InstitutionalTopBar />
 
           {/* Ticker Tape */}
           <TickerTape />
 
-          {/* Content Area */}
-          <div className="flex-1 overflow-y-auto">
+          {/* Workspace Content */}
+          <main className="p-6">
             {renderContent()}
-          </div>
-
-          {/* Footer */}
-          <footer className="border-t border-gray-800/50 bg-gray-900/30 backdrop-blur-xl px-6 py-3">
-            <div className="flex items-center justify-between text-xs text-gray-500">
-              <span className="font-medium">Multi-Asset Quantitative Research Platform v3.0</span>
-              <span>Research purposes only — Not financial advice</span>
-            </div>
-          </footer>
-        </main>
+          </main>
+        </div>
       </div>
     </AssetProvider>
   );

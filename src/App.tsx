@@ -6,6 +6,7 @@ import ComexSpotPanel from './components/ComexSpotPanel';
 import ProbabilityPanel from './components/ProbabilityPanel';
 import BacktestPanel from './components/BacktestPanel';
 import AIEnginePanel from './components/AIEnginePanel';
+import DataSourcesPanel from './components/DataSourcesPanel';
 import {
   LayoutDashboard,
   Droplets,
@@ -14,6 +15,7 @@ import {
   BarChart3,
   FlaskConical,
   Brain,
+  Database,
   Menu,
   X,
   ChevronRight,
@@ -27,6 +29,7 @@ const navItems = [
   { id: 'probability', label: 'Probability Models', icon: BarChart3 },
   { id: 'backtest', label: 'Backtesting', icon: FlaskConical },
   { id: 'ai', label: 'AI Engine', icon: Brain },
+  { id: 'datasources', label: 'Data Sources', icon: Database },
 ];
 
 export default function App() {
@@ -42,6 +45,7 @@ export default function App() {
       case 'probability': return <ProbabilityPanel />;
       case 'backtest': return <BacktestPanel />;
       case 'ai': return <AIEnginePanel />;
+      case 'datasources': return <DataSourcesPanel />;
       default: return <Dashboard />;
     }
   };

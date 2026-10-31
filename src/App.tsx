@@ -9,7 +9,11 @@ import ProbabilityPanel from './components/ProbabilityPanel';
 import BacktestPanel from './components/BacktestPanel';
 import AIEnginePanel from './components/AIEnginePanel';
 import DataSourcesPanel from './components/DataSourcesPanel';
+import DataSourcePanel from './components/DataSourcePanel';
 import InstrumentRegistryPanel from './components/InstrumentRegistryPanel';
+import IndonesianEquityPanel from './components/IndonesianEquityPanel';
+import MultiAssetIntelligencePanel from './components/MultiAssetIntelligencePanel';
+import AIResearchPanel from './components/AIResearchPanel';
 import {
   LayoutDashboard,
   Droplets,
@@ -23,6 +27,10 @@ import {
   X,
   ChevronRight,
   Settings,
+  Shield,
+  Building2,
+  Globe,
+  Sparkles,
 } from 'lucide-react';
 
 const navItems = [
@@ -33,8 +41,12 @@ const navItems = [
   { id: 'probability', label: 'Probability Models', icon: BarChart3 },
   { id: 'backtest', label: 'Backtesting', icon: FlaskConical },
   { id: 'ai', label: 'AI Engine', icon: Brain },
+  { id: 'airesearch', label: 'AI Research', icon: Sparkles },
   { id: 'datasources', label: 'Data Sources', icon: Database },
+  { id: 'integrity', label: 'Data Integrity', icon: Shield },
   { id: 'registry', label: 'Instrument Registry', icon: Settings },
+  { id: 'idx', label: 'Indonesian Equity', icon: Building2 },
+  { id: 'multiasset', label: 'Multi-Asset Intel', icon: Globe },
 ];
 
 export default function App() {
@@ -50,8 +62,12 @@ export default function App() {
       case 'probability': return <ProbabilityPanel />;
       case 'backtest': return <BacktestPanel />;
       case 'ai': return <AIEnginePanel />;
+      case 'airesearch': return <AIResearchPanel />;
       case 'datasources': return <DataSourcesPanel />;
+      case 'integrity': return <DataSourcePanel />;
       case 'registry': return <InstrumentRegistryPanel />;
+      case 'idx': return <IndonesianEquityPanel />;
+      case 'multiasset': return <MultiAssetIntelligencePanel />;
       default: return <TradingTerminal />;
     }
   };

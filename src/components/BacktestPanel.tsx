@@ -1,4 +1,4 @@
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, ComposedChart } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, Cell } from 'recharts';
 import { backtestResults } from '../data/mockData';
 import { CheckCircle, XCircle, TrendingUp, Shield, Award, BarChart2 } from 'lucide-react';
 
@@ -82,9 +82,9 @@ export default function BacktestPanel() {
               <XAxis dataKey="month" stroke="#6b7280" fontSize={10} interval={3} />
               <YAxis stroke="#6b7280" fontSize={10} unit="%" />
               <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }} />
-              <Bar dataKey="return" name="Monthly Return (%)">
+              <Bar dataKey="return" name="Monthly Return (%)" fillOpacity={0.7}>
                 {monthlyReturnsChart.map((entry, index) => (
-                  <rect key={index} fill={entry.return >= 0 ? '#10b981' : '#ef4444'} fillOpacity={0.7} />
+                  <Cell key={index} fill={entry.return >= 0 ? '#10b981' : '#ef4444'} />
                 ))}
               </Bar>
             </BarChart>

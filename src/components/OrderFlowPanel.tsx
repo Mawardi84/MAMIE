@@ -1,6 +1,6 @@
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, ComposedChart, Area, ScatterChart, Scatter, ZAxis } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, ComposedChart, Area, Cell } from 'recharts';
 import { orderFlowData, priceData } from '../data/mockData';
-import { ArrowUpRight, ArrowDownRight, GitBranch, Gauge } from 'lucide-react';
+import { ArrowUpRight, GitBranch, Gauge } from 'lucide-react';
 
 export default function OrderFlowPanel() {
   const cumulativeFlow = orderFlowData.reduce((acc, item, i) => {
@@ -74,9 +74,9 @@ export default function OrderFlowPanel() {
               <YAxis yAxisId="right" orientation="right" stroke="#6b7280" fontSize={10} />
               <Tooltip contentStyle={{ backgroundColor: '#1f2937', border: '1px solid #374151', borderRadius: '8px' }} />
               <Area yAxisId="right" type="monotone" dataKey="cumulative" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.1} strokeWidth={2} name="Cumulative Delta" />
-              <Bar yAxisId="left" dataKey="netFlow" name="Net Flow">
+              <Bar yAxisId="left" dataKey="netFlow" name="Net Flow" fillOpacity={0.6}>
                 {cumulativeFlow.map((entry, index) => (
-                  <rect key={index} fill={entry.netFlow >= 0 ? '#10b981' : '#ef4444'} fillOpacity={0.6} />
+                  <Cell key={index} fill={entry.netFlow >= 0 ? '#10b981' : '#ef4444'} />
                 ))}
               </Bar>
             </ComposedChart>

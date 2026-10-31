@@ -1,4 +1,4 @@
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { priceData, volatilityData, macroCorrelation, positioningData } from '../data/mockData';
 import { TrendingUp, TrendingDown, Activity, BarChart3, DollarSign, AlertTriangle } from 'lucide-react';
 

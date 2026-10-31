@@ -9,6 +9,7 @@ import ProbabilityPanel from './components/ProbabilityPanel';
 import BacktestPanel from './components/BacktestPanel';
 import AIEnginePanel from './components/AIEnginePanel';
 import DataSourcesPanel from './components/DataSourcesPanel';
+import InstrumentRegistryPanel from './components/InstrumentRegistryPanel';
 import {
   LayoutDashboard,
   Droplets,
@@ -21,6 +22,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  Settings,
 } from 'lucide-react';
 
 const navItems = [
@@ -32,6 +34,7 @@ const navItems = [
   { id: 'backtest', label: 'Backtesting', icon: FlaskConical },
   { id: 'ai', label: 'AI Engine', icon: Brain },
   { id: 'datasources', label: 'Data Sources', icon: Database },
+  { id: 'registry', label: 'Instrument Registry', icon: Settings },
 ];
 
 export default function App() {
@@ -48,6 +51,7 @@ export default function App() {
       case 'backtest': return <BacktestPanel />;
       case 'ai': return <AIEnginePanel />;
       case 'datasources': return <DataSourcesPanel />;
+      case 'registry': return <InstrumentRegistryPanel />;
       default: return <TradingTerminal />;
     }
   };

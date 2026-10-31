@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { AssetProvider } from './context/AssetContext';
 import Dashboard from './components/Dashboard';
 import LiquidityPanel from './components/LiquidityPanel';
 import OrderFlowPanel from './components/OrderFlowPanel';
@@ -51,6 +52,7 @@ export default function App() {
   };
 
   return (
+    <AssetProvider>
     <div className="min-h-screen bg-gray-950 text-white flex">
       {/* Mobile overlay */}
       {sidebarOpen && (
@@ -154,12 +156,13 @@ export default function App() {
             </div>
             <div className="flex items-center gap-3">
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-gray-800/50 border border-gray-700/50 rounded-lg">
-                <span className="text-amber-400 font-mono text-sm font-bold">$2,341.85</span>
-                <span className="text-emerald-400 text-xs">+0.32%</span>
+                <span className="text-gray-400 text-xs">Multi-Asset</span>
+                <span className="text-gray-600">|</span>
+                <span className="text-amber-400 text-xs font-medium">30+ Assets</span>
               </div>
               <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-800/50 border border-gray-700/50 rounded-lg">
                 <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full"></div>
-                <span className="text-gray-400 text-xs">XAU/USD</span>
+                <span className="text-gray-400 text-xs">Live Data</span>
               </div>
             </div>
           </div>
@@ -179,5 +182,6 @@ export default function App() {
         </footer>
       </main>
     </div>
+    </AssetProvider>
   );
 }

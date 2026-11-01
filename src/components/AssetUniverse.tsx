@@ -1,8 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Globe, Search, Filter, TrendingUp, TrendingDown } from 'lucide-react';
 import { ASSETS, ASSET_CATEGORIES, type Asset, type AssetCategory } from '../data/assetRegistry';
 import { fetchMultipleQuotes, type AssetQuote } from '../services/dataService';
-import { useEffect } from 'react';
 import { useAsset } from '../context/AssetContext';
 
 export default function AssetUniverse() {

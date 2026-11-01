@@ -26,6 +26,9 @@ const QuantResearchPanel = lazy(() => import('./components/QuantResearchPanel'))
 const RiskGovernancePanel = lazy(() => import('./components/RiskGovernancePanel'));
 const CrossAssetAnalysis = lazy(() => import('./components/CrossAssetAnalysis'));
 const AssetUniverse = lazy(() => import('./components/AssetUniverse'));
+const GlobalEquitiesPanel = lazy(() => import('./components/GlobalEquitiesPanel'));
+const FixedIncomePanel = lazy(() => import('./components/FixedIncomePanel'));
+const IndicesDerivativesPanel = lazy(() => import('./components/IndicesDerivativesPanel'));
 
 import { NotificationProvider } from './components/NotificationSystem';
 
@@ -89,6 +92,12 @@ export default function App() {
           return <CrossAssetAnalysis />;
         case 'asset-universe':
           return <AssetUniverse />;
+        case 'global-equities':
+          return <GlobalEquitiesPanel />;
+        case 'fixed-income':
+          return <FixedIncomePanel />;
+        case 'indices-derivatives':
+          return <IndicesDerivativesPanel />;
         default:
           return <ExecutiveDashboard />;
       }

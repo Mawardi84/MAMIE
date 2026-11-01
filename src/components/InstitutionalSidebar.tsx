@@ -74,12 +74,12 @@ export default function InstitutionalSidebar({ activePage, onPageChange }: Sideb
       title: 'ASSET CLASS',
       items: [
         { id: 'idx-equities', label: 'Indonesian Equities', icon: Building2, status: 'active' },
-        { id: 'global-equities', label: 'Global Equities', icon: Globe, status: 'coming-soon' },
+        { id: 'global-equities', label: 'Global Equities', icon: Globe, status: 'active' },
         { id: 'commodities', label: 'Commodities', icon: DollarSign, status: 'active' },
         { id: 'forex', label: 'Forex', icon: Banknote, status: 'active' },
         { id: 'crypto', label: 'Crypto', icon: Coins, status: 'active' },
-        { id: 'fixed-income', label: 'Fixed Income', icon: LineChart, status: 'coming-soon' },
-        { id: 'indices', label: 'Indices & Derivatives', icon: TrendingUp, status: 'coming-soon' },
+        { id: 'fixed-income', label: 'Fixed Income', icon: LineChart, status: 'active' },
+        { id: 'indices-derivatives', label: 'Indices & Derivatives', icon: TrendingUp, status: 'active' },
       ]
     },
     {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { BarChart3, TrendingUp, Activity, AlertTriangle } from 'lucide-react';
 import { fetchAssetPriceData } from '../services/dataService';
 import { ASSETS } from '../data/assetRegistry';
+import ExportButton from './ExportButton';
 
 interface AssetPriceData {
   symbol: string;
@@ -164,14 +165,29 @@ export default function CrossAssetAnalysis() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <BarChart3 className="w-6 h-6 text-[var(--color-accent-primary)]" />
-          Cross-Asset Analysis
-        </h1>
-        <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-          Correlation, relative performance, and cross-asset relationships
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <BarChart3 className="w-6 h-6 text-[var(--color-accent-primary)]" />
+            Cross-Asset Analysis
+          </h1>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+            Correlation, relative performance, and cross-asset relationships
+          </p>
+        </div>
+        {!loading && assetData.length > 0 && (
+          <ExportButton
+            data={assetData.map(asset => ({
+              symbol: asset.symbol,
+              name: asset.name,
+              category: asset.category,
+              latestPrice: asset.prices[asset.prices.length - 1]?.close || 0,
+              dataPoints: asset.prices.length,
+            }))}
+            filename="cross-asset-analysis"
+            label="Export Analysis"
+          />
+        )}
       </div>
 
       {/* Info Banner */}

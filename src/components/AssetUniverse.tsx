@@ -3,6 +3,7 @@ import { Globe, Search, Filter, TrendingUp, TrendingDown } from 'lucide-react';
 import { ASSETS, ASSET_CATEGORIES, type Asset, type AssetCategory } from '../data/assetRegistry';
 import { fetchMultipleQuotes, type AssetQuote } from '../services/dataService';
 import { useAsset } from '../context/AssetContext';
+import ExportButton from './ExportButton';
 
 export default function AssetUniverse() {
   const { setCurrentAsset } = useAsset();
@@ -101,14 +102,29 @@ export default function AssetUniverse() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-          <Globe className="w-6 h-6 text-[var(--color-accent-primary)]" />
-          Asset Universe
-        </h1>
-        <p className="text-sm text-[var(--color-text-secondary)] mt-1">
-          Browse and search {ASSETS.length} instruments across {Object.keys(ASSET_CATEGORIES).length} asset classes
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2">
+            <Globe className="w-6 h-6 text-[var(--color-accent-primary)]" />
+            Asset Universe
+          </h1>
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+            Browse and search {ASSETS.length} instruments across {Object.keys(ASSET_CATEGORIES).length} asset classes
+          </p>
+        </div>
+        <ExportButton
+          data={filteredAssets.map(asset => ({
+            symbol: asset.symbol,
+            name: asset.name,
+            category: asset.category,
+            exchange: asset.exchange,
+            price: quotes[asset.symbol]?.price || 0,
+            change: quotes[asset.symbol]?.changePercent || 0,
+            volume: quotes[asset.symbol]?.volume || 0,
+          }))}
+          filename="asset-universe"
+          label="Export Assets"
+        />
       </div>
 
       {/* Filters */}

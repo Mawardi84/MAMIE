@@ -33,32 +33,11 @@ export default function ExecutiveDashboard() {
     return () => clearInterval(interval);
   }, []);
 
-  // Market regime indicators (simulated for demo)
-  const regimeData = {
-    trend: { status: 'BULLISH', confidence: 72 },
-    volatility: { status: 'NORMAL', confidence: 85 },
-    riskSentiment: { status: 'RISK_ON', confidence: 68 },
-    correlation: { status: 'MODERATE', confidence: 75 },
-  };
+  // Market regime indicators - NOT_CONFIGURED
+  // Regime detection requires validated statistical models (HMM, GARCH, etc.)
+  const regimeData = null;
 
-  const getRegimeColor = (status: string) => {
-    switch (status) {
-      case 'BULLISH':
-      case 'RISK_ON':
-      case 'LOW':
-        return 'text-green-400';
-      case 'BEARISH':
-      case 'RISK_OFF':
-      case 'HIGH':
-        return 'text-red-400';
-      case 'NORMAL':
-      case 'MODERATE':
-      case 'RANGING':
-        return 'text-yellow-400';
-      default:
-        return 'text-gray-400';
-    }
-  };
+
 
   return (
     <div className="p-6 space-y-6">
@@ -195,56 +174,14 @@ export default function ExecutiveDashboard() {
             <Activity className="w-5 h-5 text-[var(--color-accent-primary)]" />
             Market Regime Monitor
           </h2>
-          <div className="bg-[var(--color-bg-surface)] rounded-lg border border-[var(--color-border-default)] p-4 space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-[var(--color-text-secondary)]">Trend Regime</div>
-                <div className={`text-lg font-bold ${getRegimeColor(regimeData.trend.status)}`}>
-                  {regimeData.trend.status}
-                </div>
+          <div className="bg-[var(--color-bg-surface)] rounded-lg border border-[var(--color-border-default)] p-4">
+            <div className="text-center py-8">
+              <div className="text-yellow-400 text-sm font-semibold mb-2">NOT_CONFIGURED</div>
+              <div className="text-gray-400 text-xs">
+                Market regime detection requires validated statistical models (HMM, GARCH, etc.)
               </div>
-              <div className="text-right">
-                <div className="text-xs text-[var(--color-text-tertiary)]">Confidence</div>
-                <div className="text-lg font-bold text-white">{regimeData.trend.confidence}%</div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-[var(--color-text-secondary)]">Volatility Regime</div>
-                <div className={`text-lg font-bold ${getRegimeColor(regimeData.volatility.status)}`}>
-                  {regimeData.volatility.status}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-[var(--color-text-tertiary)]">Confidence</div>
-                <div className="text-lg font-bold text-white">{regimeData.volatility.confidence}%</div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-[var(--color-text-secondary)]">Risk Sentiment</div>
-                <div className={`text-lg font-bold ${getRegimeColor(regimeData.riskSentiment.status)}`}>
-                  {regimeData.riskSentiment.status.replace('_', ' ')}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-[var(--color-text-tertiary)]">Confidence</div>
-                <div className="text-lg font-bold text-white">{regimeData.riskSentiment.confidence}%</div>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-sm text-[var(--color-text-secondary)]">Correlation Regime</div>
-                <div className={`text-lg font-bold ${getRegimeColor(regimeData.correlation.status)}`}>
-                  {regimeData.correlation.status}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-xs text-[var(--color-text-tertiary)]">Confidence</div>
-                <div className="text-lg font-bold text-white">{regimeData.correlation.confidence}%</div>
+              <div className="text-gray-500 text-xs mt-2">
+                This feature is not yet implemented with real data
               </div>
             </div>
           </div>

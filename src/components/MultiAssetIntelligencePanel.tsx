@@ -1,72 +1,96 @@
-/**
- * MAMIE Multi-Asset Intelligence Hub
- * PHASE 04-07: Asset Engines, Macro, Quantitative & Portfolio
- */
+import { useState, useEffect } from 'react';
+import { BarChart3, TrendingUp, Activity, DollarSign, PieChart, Target, AlertTriangle, Zap } from 'lucide-react';
+import { fetchAssetQuote } from '../services/dataService';
+import NotConfiguredMessage from './NotConfiguredMessage';
 
-import { useState } from 'react';
-import { useAsset } from '../context/AssetContext';
-import { useAssetPriceHistory, useVolatility, useCorrelation } from '../hooks/useDataHooks';
-import { ASSETS, AssetCategory } from '../data/assetRegistry';
-import { fetchAssetPriceData } from '../services/dataService';
-import { 
-  BarChart3, TrendingUp, Activity, DollarSign, 
-  PieChart, Target, AlertTriangle, Zap 
-} from 'lucide-react';
+interface AssetData {
+  symbol: string;
+  name: string;
+  price: number | null;
+  change: number | null;
+  changePercent: number | null;
+}
 
 export default function MultiAssetIntelligencePanel() {
-  const {  currentAsset } = useAsset();
-  const { data: priceHistory } = useAssetPriceHistory(currentAsset, '3mo', '1d');
-  const { volatility } = useVolatility(priceHistory, 20);
   const [activeTab, setActiveTab] = useState<'commodity' | 'fx' | 'crypto' | 'macro' | 'quant' | 'portfolio'>('commodity');
+  const [commodityData, setCommodityData] = useState<AssetData[]>([]);
+  const [fxData, setFxData] = useState<AssetData[]>([]);
+  const [cryptoData, setCryptoData] = useState<AssetData[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const latestVol = volatility?.filter((v: any) => v > 0).slice(-1)[0] || 0;
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Fetch commodity data
+        const commodities = await Promise.all([
+          fetchAssetQuote('GC=F').catch(() => null),
+          fetchAssetQuote('SI=F').catch(() => null),
+          fetchAssetQuote('CL=F').catch(() => null),
+          fetchAssetQuote('NG=F').catch(() => null),
+        ]);
 
-  // Simulated data for demonstration
-  const commodityData = [
-    { name: 'Gold', price: 2345.60, change: 0.85, trend: 'up' },
-    { name: 'Silver', price: 28.45, change: -1.2, trend: 'down' },
-    { name: 'Crude Oil', price: 78.30, change: 2.1, trend: 'up' },
-    { name: 'Natural Gas', price: 2.85, change: -0.5, trend: 'down' },
-  ];
+        setCommodityData([
+          { symbol: 'GC=F', name: 'Gold', price: commodities[0]?.price || null, change: commodities[0]?.change || null, changePercent: commodities[0]?.changePercent || null },
+          { symbol: 'SI=F', name: 'Silver', price: commodities[1]?.price || null, change: commodities[1]?.change || null, changePercent: commodities[1]?.changePercent || null },
+          { symbol: 'CL=F', name: 'Crude Oil', price: commodities[2]?.price || null, change: commodities[2]?.change || null, changePercent: commodities[2]?.changePercent || null },
+          { symbol: 'NG=F', name: 'Natural Gas', price: commodities[3]?.price || null, change: commodities[3]?.change || null, changePercent: commodities[3]?.changePercent || null },
+        ]);
 
-  const fxData = [
-    { pair: 'EUR/USD', rate: 1.0845, change: -0.12, carry: 2.5 },
-    { pair: 'GBP/USD', rate: 1.2650, change: 0.08, carry: 3.2 },
-    { pair: 'USD/JPY', rate: 154.20, change: 0.45, carry: -4.8 },
-    { pair: 'USD/IDR', rate: 15850, change: 0.23, carry: 5.5 },
-  ];
+        // Fetch FX data
+        const fx = await Promise.all([
+          fetchAssetQuote('EURUSD=X').catch(() => null),
+          fetchAssetQuote('GBPUSD=X').catch(() => null),
+          fetchAssetQuote('USDJPY=X').catch(() => null),
+        ]);
 
-  const cryptoData = [
-    { name: 'Bitcoin', price: 67432.50, change: 2.15, dominance: 52.3 },
-    { name: 'Ethereum', price: 3542.80, change: 1.85, dominance: 17.8 },
-    { name: 'Solana', price: 178.45, change: 5.32, dominance: 3.2 },
-    { name: 'BNB', price: 612.30, change: -0.45, dominance: 2.8 },
-  ];
+        setFxData([
+          { symbol: 'EURUSD=X', name: 'EUR/USD', price: fx[0]?.price || null, change: fx[0]?.change || null, changePercent: fx[0]?.changePercent || null },
+          { symbol: 'GBPUSD=X', name: 'GBP/USD', price: fx[1]?.price || null, change: fx[1]?.change || null, changePercent: fx[1]?.changePercent || null },
+          { symbol: 'USDJPY=X', name: 'USD/JPY', price: fx[2]?.price || null, change: fx[2]?.change || null, changePercent: fx[2]?.changePercent || null },
+        ]);
 
-  const macroIndicators = [
-    { indicator: 'US CPI YoY', value: '3.2%', trend: 'down', impact: 'HIGH' },
-    { indicator: 'Fed Funds Rate', value: '5.25-5.50%', trend: 'stable', impact: 'HIGH' },
-    { indicator: 'US 10Y Yield', value: '4.25%', trend: 'up', impact: 'MEDIUM' },
-    { indicator: 'BI Rate', value: '6.00%', trend: 'stable', impact: 'HIGH' },
-    { indicator: 'ID CPI YoY', value: '2.8%', trend: 'down', impact: 'MEDIUM' },
-  ];
+        // Fetch crypto data
+        const crypto = await Promise.all([
+          fetchAssetQuote('BTC-USD').catch(() => null),
+          fetchAssetQuote('ETH-USD').catch(() => null),
+        ]);
 
-  const regimeIndicators = [
-    { asset: 'Gold', regime: 'TRENDING_UP', confidence: 78 },
-    { asset: 'S&P 500', regime: 'RANGING', confidence: 65 },
-    { asset: 'Bitcoin', regime: 'HIGH_VOLATILITY', confidence: 82 },
-    { asset: 'USD/IDR', regime: 'TRENDING_UP', confidence: 71 },
-  ];
+        setCryptoData([
+          { symbol: 'BTC-USD', name: 'Bitcoin', price: crypto[0]?.price || null, change: crypto[0]?.change || null, changePercent: crypto[0]?.changePercent || null },
+          { symbol: 'ETH-USD', name: 'Ethereum', price: crypto[1]?.price || null, change: crypto[1]?.change || null, changePercent: crypto[1]?.changePercent || null },
+        ]);
+      } catch (error) {
+        console.error('Failed to fetch multi-asset data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const portfolioMetrics = {
-    totalValue: 1250000,
-    dailyPnL: 12450,
-    dailyPnLPercent: 1.0,
-    sharpeRatio: 1.45,
-    maxDrawdown: -8.5,
-    var95: -45000,
-    beta: 1.12,
-  };
+    fetchData();
+    const interval = setInterval(fetchData, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const renderAssetCard = (asset: AssetData) => (
+    <div key={asset.symbol} className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-white font-semibold">{asset.name}</span>
+        {asset.changePercent !== null && (
+          <span className={`text-xs font-mono ${asset.changePercent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+            {asset.changePercent >= 0 ? '+' : ''}{asset.changePercent.toFixed(2)}%
+          </span>
+        )}
+      </div>
+      {asset.price !== null ? (
+        <div className="text-xl font-bold text-white font-mono">
+          {asset.price < 10 ? asset.price.toFixed(4) : asset.price.toFixed(2)}
+        </div>
+      ) : (
+        <div className="text-gray-500 text-sm">Data unavailable</div>
+      )}
+    </div>
+  );
 
   return (
     <div className="p-6 space-y-6">
@@ -108,26 +132,15 @@ export default function MultiAssetIntelligencePanel() {
       {/* Commodities Tab */}
       {activeTab === 'commodity' && (
         <div className="space-y-4">
-          <div className="premium-card p-4">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
             <h3 className="text-white font-semibold mb-4">Commodity Prices</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {commodityData.map((item, i) => (
-                <div key={i} className="p-4 bg-gray-900/50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-white font-semibold">{item.name}</span>
-                    <span className={`text-sm font-mono ${item.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {item.change >= 0 ? '+' : ''}{item.change}%
-                    </span>
-                  </div>
-                  <div className="text-2xl font-bold text-white font-mono">
-                    ${item.price.toFixed(2)}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Trend: {item.trend === 'up' ? '↑ Bullish' : '↓ Bearish'}
-                  </div>
-                </div>
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center py-8 text-gray-500">Loading...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {commodityData.map(renderAssetCard)}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -135,34 +148,15 @@ export default function MultiAssetIntelligencePanel() {
       {/* Forex Tab */}
       {activeTab === 'fx' && (
         <div className="space-y-4">
-          <div className="premium-card p-4">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
             <h3 className="text-white font-semibold mb-4">Major Currency Pairs</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-800">
-                    <th className="text-left text-gray-400 font-semibold py-2 px-3">Pair</th>
-                    <th className="text-right text-gray-400 font-semibold py-2 px-3">Rate</th>
-                    <th className="text-right text-gray-400 font-semibold py-2 px-3">Change</th>
-                    <th className="text-right text-gray-400 font-semibold py-2 px-3">Carry</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {fxData.map((item, i) => (
-                    <tr key={i} className="border-b border-gray-800/50">
-                      <td className="py-2 px-3 text-white font-semibold">{item.pair}</td>
-                      <td className="py-2 px-3 text-right text-white font-mono">{item.rate.toFixed(4)}</td>
-                      <td className={`py-2 px-3 text-right font-mono ${item.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {item.change >= 0 ? '+' : ''}{item.change}%
-                      </td>
-                      <td className={`py-2 px-3 text-right font-mono ${item.carry >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                        {item.carry >= 0 ? '+' : ''}{item.carry}%
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {loading ? (
+              <div className="text-center py-8 text-gray-500">Loading...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {fxData.map(renderAssetCard)}
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -170,160 +164,45 @@ export default function MultiAssetIntelligencePanel() {
       {/* Crypto Tab */}
       {activeTab === 'crypto' && (
         <div className="space-y-4">
-          <div className="premium-card p-4">
+          <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-6">
             <h3 className="text-white font-semibold mb-4">Cryptocurrency Market</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {cryptoData.map((item, i) => (
-                <div key={i} className="p-4 bg-gray-900/50 rounded-lg">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-white font-semibold">{item.name}</span>
-                    <span className={`text-sm font-mono ${item.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                      {item.change >= 0 ? '+' : ''}{item.change}%
-                    </span>
-                  </div>
-                  <div className="text-2xl font-bold text-white font-mono">
-                    ${item.price.toLocaleString()}
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    Dominance: {item.dominance}%
-                  </div>
-                </div>
-              ))}
-            </div>
+            {loading ? (
+              <div className="text-center py-8 text-gray-500">Loading...</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {cryptoData.map(renderAssetCard)}
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Macro Tab */}
       {activeTab === 'macro' && (
-        <div className="space-y-4">
-          <div className="premium-card p-4">
-            <h3 className="text-white font-semibold mb-4">Key Macro Indicators</h3>
-            <div className="space-y-3">
-              {macroIndicators.map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg">
-                  <div>
-                    <div className="text-white font-medium">{item.indicator}</div>
-                    <div className="text-xs text-gray-500">Impact: {item.impact}</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-white font-mono font-semibold">{item.value}</div>
-                    <div className={`text-xs ${
-                      item.trend === 'up' ? 'text-emerald-400' : 
-                      item.trend === 'down' ? 'text-red-400' : 
-                      'text-gray-400'
-                    }`}>
-                      {item.trend === 'up' ? '↑' : item.trend === 'down' ? '↓' : '→'} {item.trend}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
+        <NotConfiguredMessage 
+          feature="Macro Intelligence"
+          reason="Economic indicators require FRED API integration for real-time data."
+          alternative="This feature can be enabled by integrating with FRED API or other economic data providers."
+        />
       )}
 
       {/* Quantitative Tab */}
       {activeTab === 'quant' && (
-        <div className="space-y-4">
-          <div className="premium-card p-4">
-            <h3 className="text-white font-semibold mb-4">Market Regime Detection</h3>
-            <div className="space-y-3">
-              {regimeIndicators.map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-gray-900/50 rounded-lg">
-                  <div>
-                    <div className="text-white font-medium">{item.asset}</div>
-                    <div className="text-xs text-gray-500">Confidence: {item.confidence}%</div>
-                  </div>
-                  <div className={`text-sm font-mono font-semibold px-3 py-1 rounded ${
-                    item.regime === 'TRENDING_UP' ? 'bg-emerald-500/20 text-emerald-400' :
-                    item.regime === 'TRENDING_DOWN' ? 'bg-red-500/20 text-red-400' :
-                    item.regime === 'HIGH_VOLATILITY' ? 'bg-amber-500/20 text-amber-400' :
-                    'bg-blue-500/20 text-blue-400'
-                  }`}>
-                    {item.regime.replace('_', ' ')}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="premium-card p-4">
-            <h3 className="text-white font-semibold mb-4">Current Asset Analysis</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-gray-400 text-xs mb-1">Realized Volatility</div>
-                <div className="text-2xl font-bold text-white">{latestVol.toFixed(1)}%</div>
-              </div>
-              <div>
-                <div className="text-gray-400 text-xs mb-1">Vol Regime</div>
-                <div className="text-2xl font-bold text-white">
-                  {latestVol > 20 ? 'HIGH' : latestVol > 10 ? 'NORMAL' : 'LOW'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <NotConfiguredMessage 
+          feature="Quantitative Models"
+          reason="Advanced quantitative models require validated statistical implementations."
+          alternative="This feature can be enabled by implementing regime detection, probability models, and statistical analysis."
+        />
       )}
 
       {/* Portfolio Tab */}
       {activeTab === 'portfolio' && (
-        <div className="space-y-4">
-          <div className="premium-card p-4">
-            <h3 className="text-white font-semibold mb-4">Portfolio Overview</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div>
-                <div className="text-gray-400 text-xs mb-1">Total Value</div>
-                <div className="text-xl font-bold text-white">
-                  ${portfolioMetrics.totalValue.toLocaleString()}
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-400 text-xs mb-1">Daily P&L</div>
-                <div className={`text-xl font-bold ${portfolioMetrics.dailyPnL >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {portfolioMetrics.dailyPnL >= 0 ? '+' : ''}${portfolioMetrics.dailyPnL.toLocaleString()}
-                </div>
-                <div className={`text-xs ${portfolioMetrics.dailyPnLPercent >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  ({portfolioMetrics.dailyPnLPercent}%)
-                </div>
-              </div>
-              <div>
-                <div className="text-gray-400 text-xs mb-1">Sharpe Ratio</div>
-                <div className="text-xl font-bold text-white">{portfolioMetrics.sharpeRatio}</div>
-              </div>
-              <div>
-                <div className="text-gray-400 text-xs mb-1">Beta</div>
-                <div className="text-xl font-bold text-white">{portfolioMetrics.beta}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="premium-card p-4">
-            <h3 className="text-white font-semibold mb-4">Risk Metrics</h3>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <div className="text-gray-400 text-xs mb-1">Max Drawdown</div>
-                <div className="text-xl font-bold text-red-400">{portfolioMetrics.maxDrawdown}%</div>
-              </div>
-              <div>
-                <div className="text-gray-400 text-xs mb-1">VaR (95%)</div>
-                <div className="text-xl font-bold text-red-400">
-                  -${Math.abs(portfolioMetrics.var95).toLocaleString()}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <NotConfiguredMessage 
+          feature="Portfolio Risk Analysis"
+          reason="Portfolio analysis requires position data and risk modeling."
+          alternative="This feature can be enabled by implementing portfolio management and risk analytics."
+        />
       )}
-
-      {/* Info Box */}
-      <div className="bg-blue-500/5 border border-blue-500/20 rounded-xl p-4">
-        <p className="text-blue-300 text-xs">
-          <strong>PHASE 04-07 Implementation:</strong> This hub provides multi-asset intelligence across commodities, 
-          forex, crypto, macro indicators, quantitative models, and portfolio risk. Data is simulated for demonstration. 
-          In production, this would integrate with real-time market data feeds and quantitative models.
-        </p>
-      </div>
     </div>
   );
 }

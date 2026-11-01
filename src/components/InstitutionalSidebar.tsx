@@ -66,8 +66,8 @@ export default function InstitutionalSidebar({ activePage, onPageChange }: Sideb
       title: 'MARKET INTELLIGENCE',
       items: [
         { id: 'market-terminal', label: 'Market Terminal', icon: Activity, status: 'active' },
-        { id: 'asset-universe', label: 'Asset Universe', icon: Globe, status: 'coming-soon' },
-        { id: 'cross-asset', label: 'Cross-Asset Analysis', icon: BarChart3, status: 'coming-soon' },
+        { id: 'asset-universe', label: 'Asset Universe', icon: Globe, status: 'active' },
+        { id: 'cross-asset', label: 'Cross-Asset Analysis', icon: BarChart3, status: 'active' },
       ]
     },
     {

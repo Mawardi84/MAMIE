@@ -22,6 +22,8 @@ import MacroPanel from './components/MacroPanel';
 import PositioningPanel from './components/PositioningPanel';
 import QuantResearchPanel from './components/QuantResearchPanel';
 import RiskGovernancePanel from './components/RiskGovernancePanel';
+import CrossAssetAnalysis from './components/CrossAssetAnalysis';
+import AssetUniverse from './components/AssetUniverse';
 
 export default function App() {
   const [activePage, setActivePage] = useState('executive-dashboard');
@@ -68,6 +70,10 @@ export default function App() {
       case 'risk-analytics':
       case 'model-governance':
         return <RiskGovernancePanel />;
+      case 'cross-asset':
+        return <CrossAssetAnalysis />;
+      case 'asset-universe':
+        return <AssetUniverse />;
       default:
         return <ExecutiveDashboard />;
     }

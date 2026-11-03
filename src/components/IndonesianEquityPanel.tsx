@@ -7,7 +7,7 @@ import NotConfiguredMessage from './NotConfiguredMessage';
 
 export default function IndonesianEquityPanel() {
   const {  currentAsset } = useAsset();
-  const {  priceHistory } = useAssetPriceHistory(currentAsset, '3mo', '1d');
+  const { data: priceHistory } = useAssetPriceHistory(currentAsset, '3mo', '1d');
   const { volatility } = useVolatility(priceHistory, 20);
 
   const latestVol = volatility?.filter((v: any) => v > 0).slice(-1)[0] || 0;

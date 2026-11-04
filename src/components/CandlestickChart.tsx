@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createChart, ColorType, CandlestickSeries, HistogramSeries, IChartApi, ISeriesApi, CandlestickData, Time } from 'lightweight-charts';
 import { useAsset } from '../context/AssetContext';
-import { fetchAssetPriceData } from '../services/dataService';
+import { getHistoricalData, SAMPLE_DATA } from '../data/sampleData';
 import { Maximize2, Minimize2 } from 'lucide-react';
 
 const TIMEFRAMES = [
@@ -121,20 +121,27 @@ export default function CandlestickChart() {
 
   // Load data when asset or timeframe changes
   useEffect(() => {
-    const loadData = async () => {
+    const loadData = () => {
       if (!candlestickSeriesRef.current || !volumeSeriesRef.current) return;
 
       setLoading(true);
       try {
-        const data = await fetchAssetPriceData(
-          currentAsset.symbol,
-          currentTimeframe.range,
-          currentTimeframe.value
-        );
+        // Map asset symbol to sample data key
+        const symbolMap: Record<string, keyof typeof SAMPLE_DATA> = {
+          'GC=F': 'GOLD',
+          'SI=F': 'SILVER',
+          'CL=F': 'OIL',
+          'BTC-USD': 'BITCOIN',
+          '^GSPC': 'SP500',
+          'EURUSD=X': 'EURUSD',
+        };
+        
+        const sampleKey = symbolMap[currentAsset.symbol] || 'GOLD';
+        const data = getHistoricalData(sampleKey, 365);
 
         // Transform to candlestick format
-        const candleData: CandlestickData<Time>[] = data.map(d => ({
-          time: (d.timestamp / 1000) as Time,
+        const candleData: CandlestickData<Time>[] = data.map((d: any) => ({
+          time: d.time as Time,
           open: d.open,
           high: d.high,
           low: d.low,
@@ -142,8 +149,8 @@ export default function CandlestickChart() {
         }));
 
         // Transform to volume format
-        const volumeData = data.map(d => ({
-          time: (d.timestamp / 1000) as Time,
+        const volumeData = data.map((d: any) => ({
+          time: d.time as Time,
           value: d.volume,
           color: d.close >= d.open ? 'rgba(16, 185, 129, 0.5)' : 'rgba(239, 68, 68, 0.5)',
         }));

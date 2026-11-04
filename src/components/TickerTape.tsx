@@ -1,18 +1,26 @@
 import { useState, useEffect } from 'react';
-import { getTopAssets, type Asset } from '../data/assetRegistry';
-import { fetchMultipleQuotes, type AssetQuote } from '../services/dataService';
+import { getMultipleQuotes } from '../data/sampleData';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
 export default function TickerTape() {
-  const [quotes, setQuotes] = useState<Record<string, AssetQuote>>({});
+  const [quotes, setQuotes] = useState<Record<string, any>>({});
   const [prevQuotes, setPrevQuotes] = useState<Record<string, number>>({});
-  const topAssets = getTopAssets(20);
+
+  // Sample assets for ticker
+  const tickerAssets = [
+    { symbol: 'GOLD', name: 'Gold', category: 'metals' },
+    { symbol: 'BITCOIN', name: 'Bitcoin', category: 'crypto' },
+    { symbol: 'OIL', name: 'Oil', category: 'commodities' },
+    { symbol: 'SP500', name: 'S&P 500', category: 'indices' },
+    { symbol: 'EURUSD', name: 'EUR/USD', category: 'forex' },
+    { symbol: 'SILVER', name: 'Silver', category: 'metals' },
+  ];
 
   useEffect(() => {
-    const fetchQuotes = async () => {
+    const loadQuotes = () => {
       try {
-        const symbols = topAssets.map(a => a.symbol);
-        const newQuotes = await fetchMultipleQuotes(symbols);
+        const symbols = tickerAssets.map(a => a.symbol);
+        const newQuotes = getMultipleQuotes(symbols);
         
         const prev: Record<string, number> = {};
         Object.entries(quotes).forEach(([symbol, quote]) => {
@@ -21,12 +29,12 @@ export default function TickerTape() {
         setPrevQuotes(prev);
         setQuotes(newQuotes);
       } catch (e) {
-        console.error('Ticker fetch error:', e);
+        console.error('Ticker load error:', e);
       }
     };
 
-    fetchQuotes();
-    const interval = setInterval(fetchQuotes, 30000);
+    loadQuotes();
+    const interval = setInterval(loadQuotes, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -43,7 +51,7 @@ export default function TickerTape() {
       <div className="flex animate-scroll">
         {[...Array(2)].map((_, repeatIdx) => (
           <div key={repeatIdx} className="flex items-center gap-8 px-6 py-2.5 flex-shrink-0">
-            {topAssets.map((asset) => {
+            {tickerAssets.map((asset: any) => {
               const quote = quotes[asset.symbol];
               if (!quote) return null;
 

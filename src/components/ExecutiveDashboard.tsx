@@ -1,44 +1,27 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Activity, AlertTriangle, BarChart3, DollarSign, Globe, Zap } from 'lucide-react';
-import { fetchMultipleQuotes, type AssetQuote } from '../services/dataService';
+import { getMultipleQuotes, getCurrentQuote } from '../data/sampleData';
 import { ASSETS } from '../data/assetRegistry';
-import DataUnavailable from './DataUnavailable';
 
 export default function ExecutiveDashboard() {
-  const [quotes, setQuotes] = useState<Record<string, AssetQuote>>({});
+  const [quotes, setQuotes] = useState<Record<string, any>>({});
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchQuotes = async () => {
+    const loadQuotes = () => {
       try {
-        setError(null);
-        const symbols = [
-          'GC=F',      // Gold
-          'CL=F',      // Oil
-          'BTC-USD',   // Bitcoin
-          '^GSPC',     // S&P 500
-          '^N225',     // Nikkei
-          'EURUSD=X',  // EUR/USD
-          'DX-Y.NYB',  // DXY
-        ];
-        const newQuotes = await fetchMultipleQuotes(symbols);
-        
-        if (!newQuotes || Object.keys(newQuotes).length === 0) {
-          setError('No data available from market data sources');
-        } else {
-          setQuotes(newQuotes);
-        }
+        const symbols = ['GOLD', 'OIL', 'BITCOIN', 'SP500', 'EURUSD', 'SILVER'];
+        const newQuotes = getMultipleQuotes(symbols);
+        setQuotes(newQuotes);
         setLoading(false);
       } catch (e) {
-        console.error('Failed to fetch quotes:', e);
-        setError('Failed to fetch market data. Please check your internet connection.');
+        console.error('Failed to load quotes:', e);
         setLoading(false);
       }
     };
 
-    fetchQuotes();
-    const interval = setInterval(fetchQuotes, 60000);
+    loadQuotes();
+    const interval = setInterval(loadQuotes, 60000);
     return () => clearInterval(interval);
   }, []);
 
@@ -58,13 +41,19 @@ export default function ExecutiveDashboard() {
         </p>
       </div>
 
-      {/* Error Message */}
-      {error && (
-        <DataUnavailable 
-          message="Market Data Unavailable"
-          reason={error}
-        />
-      )}
+      {/* Demo Notice */}
+      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 text-blue-400 mt-0.5" />
+          <div>
+            <h3 className="text-blue-400 font-semibold text-sm">Demo Data</h3>
+            <p className="text-gray-300 text-xs mt-1">
+              This dashboard is using sample market data for demonstration purposes. 
+              Connect to a backend API for real-time market data.
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Global Market Snapshot */}
       <div>
@@ -86,13 +75,13 @@ export default function ExecutiveDashboard() {
               <div className="bg-[var(--color-bg-surface)] rounded-lg p-4 border border-[var(--color-border-default)]">
                 <div className="text-xs text-[var(--color-text-tertiary)] mb-1">Gold</div>
                 <div className="text-lg font-bold text-white font-mono">
-                  ${quotes['GC=F']?.price.toFixed(2) || 'N/A'}
+                  ${quotes['GOLD']?.price.toFixed(2) || 'N/A'}
                 </div>
                 <div className={`text-xs font-medium mt-1 ${
-                  (quotes['GC=F']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                  (quotes['GOLD']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
                 }`}>
-                  {quotes['GC=F']?.changePercent >= 0 ? '+' : ''}
-                  {quotes['GC=F']?.changePercent.toFixed(2) || '0.00'}%
+                  {quotes['GOLD']?.changePercent >= 0 ? '+' : ''}
+                  {quotes['GOLD']?.changePercent.toFixed(2) || '0.00'}%
                 </div>
               </div>
 
@@ -100,13 +89,13 @@ export default function ExecutiveDashboard() {
               <div className="bg-[var(--color-bg-surface)] rounded-lg p-4 border border-[var(--color-border-default)]">
                 <div className="text-xs text-[var(--color-text-tertiary)] mb-1">Crude Oil</div>
                 <div className="text-lg font-bold text-white font-mono">
-                  ${quotes['CL=F']?.price.toFixed(2) || 'N/A'}
+                  ${quotes['OIL']?.price.toFixed(2) || 'N/A'}
                 </div>
                 <div className={`text-xs font-medium mt-1 ${
-                  (quotes['CL=F']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                  (quotes['OIL']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
                 }`}>
-                  {quotes['CL=F']?.changePercent >= 0 ? '+' : ''}
-                  {quotes['CL=F']?.changePercent.toFixed(2) || '0.00'}%
+                  {quotes['OIL']?.changePercent >= 0 ? '+' : ''}
+                  {quotes['OIL']?.changePercent.toFixed(2) || '0.00'}%
                 </div>
               </div>
 
@@ -114,13 +103,13 @@ export default function ExecutiveDashboard() {
               <div className="bg-[var(--color-bg-surface)] rounded-lg p-4 border border-[var(--color-border-default)]">
                 <div className="text-xs text-[var(--color-text-tertiary)] mb-1">Bitcoin</div>
                 <div className="text-lg font-bold text-white font-mono">
-                  ${quotes['BTC-USD']?.price.toLocaleString() || 'N/A'}
+                  ${quotes['BITCOIN']?.price.toLocaleString() || 'N/A'}
                 </div>
                 <div className={`text-xs font-medium mt-1 ${
-                  (quotes['BTC-USD']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                  (quotes['BITCOIN']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
                 }`}>
-                  {quotes['BTC-USD']?.changePercent >= 0 ? '+' : ''}
-                  {quotes['BTC-USD']?.changePercent.toFixed(2) || '0.00'}%
+                  {quotes['BITCOIN']?.changePercent >= 0 ? '+' : ''}
+                  {quotes['BITCOIN']?.changePercent.toFixed(2) || '0.00'}%
                 </div>
               </div>
 
@@ -128,27 +117,27 @@ export default function ExecutiveDashboard() {
               <div className="bg-[var(--color-bg-surface)] rounded-lg p-4 border border-[var(--color-border-default)]">
                 <div className="text-xs text-[var(--color-text-tertiary)] mb-1">S&P 500</div>
                 <div className="text-lg font-bold text-white font-mono">
-                  {quotes['^GSPC']?.price.toLocaleString() || 'N/A'}
+                  {quotes['SP500']?.price.toLocaleString() || 'N/A'}
                 </div>
                 <div className={`text-xs font-medium mt-1 ${
-                  (quotes['^GSPC']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                  (quotes['SP500']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
                 }`}>
-                  {quotes['^GSPC']?.changePercent >= 0 ? '+' : ''}
-                  {quotes['^GSPC']?.changePercent.toFixed(2) || '0.00'}%
+                  {quotes['SP500']?.changePercent >= 0 ? '+' : ''}
+                  {quotes['SP500']?.changePercent.toFixed(2) || '0.00'}%
                 </div>
               </div>
 
-              {/* Nikkei */}
+              {/* Silver */}
               <div className="bg-[var(--color-bg-surface)] rounded-lg p-4 border border-[var(--color-border-default)]">
-                <div className="text-xs text-[var(--color-text-tertiary)] mb-1">Nikkei 225</div>
+                <div className="text-xs text-[var(--color-text-tertiary)] mb-1">Silver</div>
                 <div className="text-lg font-bold text-white font-mono">
-                  {quotes['^N225']?.price.toLocaleString() || 'N/A'}
+                  ${quotes['SILVER']?.price.toFixed(2) || 'N/A'}
                 </div>
                 <div className={`text-xs font-medium mt-1 ${
-                  (quotes['^N225']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                  (quotes['SILVER']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
                 }`}>
-                  {quotes['^N225']?.changePercent >= 0 ? '+' : ''}
-                  {quotes['^N225']?.changePercent.toFixed(2) || '0.00'}%
+                  {quotes['SILVER']?.changePercent >= 0 ? '+' : ''}
+                  {quotes['SILVER']?.changePercent.toFixed(2) || '0.00'}%
                 </div>
               </div>
 
@@ -156,27 +145,27 @@ export default function ExecutiveDashboard() {
               <div className="bg-[var(--color-bg-surface)] rounded-lg p-4 border border-[var(--color-border-default)]">
                 <div className="text-xs text-[var(--color-text-tertiary)] mb-1">EUR/USD</div>
                 <div className="text-lg font-bold text-white font-mono">
-                  {quotes['EURUSD=X']?.price.toFixed(4) || 'N/A'}
+                  {quotes['EURUSD']?.price.toFixed(4) || 'N/A'}
                 </div>
                 <div className={`text-xs font-medium mt-1 ${
-                  (quotes['EURUSD=X']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                  (quotes['EURUSD']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
                 }`}>
-                  {quotes['EURUSD=X']?.changePercent >= 0 ? '+' : ''}
-                  {quotes['EURUSD=X']?.changePercent.toFixed(2) || '0.00'}%
+                  {quotes['EURUSD']?.changePercent >= 0 ? '+' : ''}
+                  {quotes['EURUSD']?.changePercent.toFixed(2) || '0.00'}%
                 </div>
               </div>
 
-              {/* DXY */}
+              {/* DXY - Using EURUSD inverse as proxy */}
               <div className="bg-[var(--color-bg-surface)] rounded-lg p-4 border border-[var(--color-border-default)]">
                 <div className="text-xs text-[var(--color-text-tertiary)] mb-1">US Dollar Index</div>
                 <div className="text-lg font-bold text-white font-mono">
-                  {quotes['DX-Y.NYB']?.price.toFixed(2) || 'N/A'}
+                  {(105 - (quotes['EURUSD']?.price - 1.08) * 100).toFixed(2) || 'N/A'}
                 </div>
                 <div className={`text-xs font-medium mt-1 ${
-                  (quotes['DX-Y.NYB']?.changePercent || 0) >= 0 ? 'text-green-400' : 'text-red-400'
+                  (quotes['EURUSD']?.changePercent || 0) <= 0 ? 'text-green-400' : 'text-red-400'
                 }`}>
-                  {quotes['DX-Y.NYB']?.changePercent >= 0 ? '+' : ''}
-                  {quotes['DX-Y.NYB']?.changePercent.toFixed(2) || '0.00'}%
+                  {quotes['EURUSD']?.changePercent <= 0 ? '+' : ''}
+                  {(-(quotes['EURUSD']?.changePercent || 0)).toFixed(2) || '0.00'}%
                 </div>
               </div>
             </>

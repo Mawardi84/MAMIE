@@ -45,11 +45,29 @@ export interface AssetQuote {
   symbol: string;
 }
 
+// Detect if running on Vercel (serverless function available)
+const IS_VERCEL = typeof window !== 'undefined' && 
+  (window.location.hostname.includes('vercel.app') || 
+   window.location.hostname.includes('preview.qwenlm.io'));
+
 // CORS Proxy fallback chain (used when backend is not available)
+// Priority: Vercel serverless > Backend API > Public CORS proxies
 const CORS_PROXIES = [
-  (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  // Vercel serverless function (most reliable if deployed)
+  ...(IS_VERCEL ? [(url: string) => {
+    const urlObj = new URL(url);
+    const symbol = urlObj.pathname.split('/').pop() || '';
+    const range = urlObj.searchParams.get('range') || '1mo';
+    const interval = urlObj.searchParams.get('interval') || '1d';
+    return `/api/proxy?symbol=${encodeURIComponent(symbol)}&range=${range}&interval=${interval}`;
+  }] : []),
+  
+  // Public CORS proxies (fallback)
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  (url: string) => `https://corsproxy.org/?${encodeURIComponent(url)}`,
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+  (url: string) => `https://proxy.cors.sh/${url}`,
+  (url: string) => `https://thingproxy.freeboard.io/fetch/${url}`,
 ];
 
 // Backend API functions (tvdatafeed)
@@ -89,6 +107,7 @@ async function fetchWithProxy(url: string): Promise<Response> {
     if (response.ok) return response;
   } catch (e) {
     // CORS blocked or timeout, try proxies
+    console.log('Direct fetch failed, trying CORS proxies...');
   }
 
   // Try each CORS proxy
@@ -99,13 +118,28 @@ async function fetchWithProxy(url: string): Promise<Response> {
       const timeoutId = setTimeout(() => controller.abort(), 10000);
       const response = await fetch(proxyUrl, { signal: controller.signal });
       clearTimeout(timeoutId);
-      if (response.ok) return response;
+      
+      if (response.ok) {
+        console.log(`✓ Successfully fetched via proxy ${i + 1}`);
+        return response;
+      } else {
+        console.log(`Proxy ${i + 1} returned ${response.status}, trying next...`);
+      }
     } catch (e) {
+      console.log(`Proxy ${i + 1} failed, trying next...`);
       continue;
     }
   }
 
-  throw new Error('All fetch attempts failed. Check internet connection or try again later.');
+  // All proxies failed - provide helpful error message
+  throw new Error(
+    'Unable to fetch market data. All CORS proxies are currently unavailable.\n\n' +
+    'Solutions:\n' +
+    '1. Set up the backend API (recommended): cd backend && npm install && npm start\n' +
+    '2. Configure VITE_API_BASE in .env file\n' +
+    '3. Wait a few minutes and try again (proxies may be temporarily down)\n' +
+    '4. Check your internet connection'
+  );
 }
 
 async function safeJson(response: Response): Promise<any> {

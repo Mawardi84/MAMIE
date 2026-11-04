@@ -17,10 +17,12 @@ export default function MultiAssetIntelligencePanel() {
   const [fxData, setFxData] = useState<AssetData[]>([]);
   const [cryptoData, setCryptoData] = useState<AssetData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
+      setError(null);
       try {
         // Fetch commodity data
         const commodities = await Promise.all([

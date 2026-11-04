@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, Activity, AlertTriangle, BarChart3, DollarSign, Globe, Zap } from 'lucide-react';
 import { fetchMultipleQuotes, type AssetQuote } from '../services/dataService';
 import { ASSETS } from '../data/assetRegistry';
+import DataUnavailable from './DataUnavailable';
 
 export default function ExecutiveDashboard() {
   const [quotes, setQuotes] = useState<Record<string, AssetQuote>>({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchQuotes = async () => {
       try {
+        setError(null);
         const symbols = [
           'GC=F',      // Gold
           'CL=F',      // Oil
@@ -20,10 +23,16 @@ export default function ExecutiveDashboard() {
           'DX-Y.NYB',  // DXY
         ];
         const newQuotes = await fetchMultipleQuotes(symbols);
-        setQuotes(newQuotes);
+        
+        if (!newQuotes || Object.keys(newQuotes).length === 0) {
+          setError('No data available from market data sources');
+        } else {
+          setQuotes(newQuotes);
+        }
         setLoading(false);
       } catch (e) {
         console.error('Failed to fetch quotes:', e);
+        setError('Failed to fetch market data. Please check your internet connection.');
         setLoading(false);
       }
     };
@@ -48,6 +57,14 @@ export default function ExecutiveDashboard() {
           Global market intelligence and risk monitoring
         </p>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <DataUnavailable 
+          message="Market Data Unavailable"
+          reason={error}
+        />
+      )}
 
       {/* Global Market Snapshot */}
       <div>

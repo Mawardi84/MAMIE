@@ -1,0 +1,22 @@
+# MAMIE Backend Dependencies
+
+# Web Framework
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+
+# CORS
+python-multipart==0.0.6
+
+# Data Processing
+pandas==2.2.0
+numpy==1.26.3
+
+# TradingView Data
+tvDatafeed==2.1.0
+
+# Utilities
+python-dotenv==1.0.0
+requests==2.31.0
+
+# WebSocket (for tvdatafeed)
+websocket-client==1.7.0

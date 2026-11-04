@@ -1,7 +1,12 @@
 // Multi-Asset Data Fetching Service
 // Supports: Metals, Forex, Crypto, Commodities, Indices, Stocks
+// Now supports backend API with tvdatafeed for reliable data
 
 import { getCOTCommodity, type Asset } from '../data/assetRegistry';
+
+// Backend API configuration
+const API_BASE = import.meta.env.VITE_API_BASE || '';
+const USE_BACKEND = API_BASE !== '';
 
 export interface PriceData {
   timestamp: number;
@@ -40,12 +45,38 @@ export interface AssetQuote {
   symbol: string;
 }
 
-// CORS Proxy fallback chain
+// CORS Proxy fallback chain (used when backend is not available)
 const CORS_PROXIES = [
   (url: string) => `https://corsproxy.io/?${encodeURIComponent(url)}`,
   (url: string) => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
   (url: string) => `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
 ];
+
+// Backend API functions (tvdatafeed)
+async function fetchFromBackend<T>(endpoint: string): Promise<T> {
+  const response = await fetch(`${API_BASE}${endpoint}`);
+  
+  if (!response.ok) {
+    throw new Error(`Backend API error: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
+// Map range to n_bars for backend API
+function rangeToBars(range: string): number {
+  const map: Record<string, number> = {
+    '1d': 1,
+    '5d': 5,
+    '1mo': 30,
+    '3mo': 90,
+    '6mo': 180,
+    '1y': 365,
+    '2y': 730,
+    '5y': 1825,
+  };
+  return map[range] || 30;
+}
 
 // Fetch with CORS proxy fallback
 async function fetchWithProxy(url: string): Promise<Response> {
@@ -94,6 +125,31 @@ export async function fetchAssetPriceData(
   range: string = '1mo',
   interval: string = '1d'
 ): Promise<PriceData[]> {
+  // Use backend API if available
+  if (USE_BACKEND) {
+    try {
+      const n_bars = rangeToBars(range);
+      const result = await fetchFromBackend<any>(
+        `/api/data/${encodeURIComponent(symbol)}?interval=${interval}&n_bars=${n_bars}`
+      );
+      
+      // Convert backend response to PriceData format
+      return result.data.map((item: any) => ({
+        timestamp: new Date(item.timestamp).getTime() / 1000,
+        date: item.timestamp.split('T')[0],
+        open: item.open,
+        high: item.high,
+        low: item.low,
+        close: item.close,
+        volume: item.volume || 0,
+      }));
+    } catch (error) {
+      console.warn('Backend API failed, falling back to Yahoo Finance:', error);
+      // Fall through to Yahoo Finance
+    }
+  }
+  
+  // Fallback to Yahoo Finance via CORS proxy
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${range}&interval=${interval}`;
   const response = await fetchWithProxy(url);
   const data = await safeJson(response);
@@ -121,6 +177,30 @@ export async function fetchAssetPriceData(
 
 // Fetch real-time quote for ANY asset
 export async function fetchAssetQuote(symbol: string): Promise<AssetQuote> {
+  // Use backend API if available
+  if (USE_BACKEND) {
+    try {
+      const data = await fetchFromBackend<any>(`/api/quote/${encodeURIComponent(symbol)}`);
+      
+      return {
+        price: data.price,
+        change: data.change,
+        changePercent: data.changePercent,
+        high: data.high,
+        low: data.low,
+        volume: data.volume,
+        previousClose: data.previousClose,
+        marketCap: undefined, // Backend doesn't provide this
+        name: symbol, // Backend doesn't provide name
+        symbol: data.symbol || symbol,
+      };
+    } catch (error) {
+      console.warn('Backend API failed, falling back to Yahoo Finance:', error);
+      // Fall through to Yahoo Finance
+    }
+  }
+  
+  // Fallback to Yahoo Finance via CORS proxy
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?interval=1d&range=5d`;
   const response = await fetchWithProxy(url);
   const data = await safeJson(response);
@@ -160,6 +240,38 @@ export async function fetchAssetQuote(symbol: string): Promise<AssetQuote> {
 
 // Fetch multiple quotes in parallel (for watchlist)
 export async function fetchMultipleQuotes(symbols: string[]): Promise<Record<string, AssetQuote>> {
+  // Use backend API if available (more efficient)
+  if (USE_BACKEND) {
+    try {
+      const symbolsParam = symbols.map(s => encodeURIComponent(s)).join(',');
+      const result = await fetchFromBackend<any>(`/api/multiple-quotes?symbols=${symbolsParam}`);
+      
+      const quotesMap: Record<string, AssetQuote> = {};
+      result.quotes.forEach((q: any) => {
+        if (!q.error) {
+          quotesMap[q.symbol] = {
+            price: q.price,
+            change: q.change,
+            changePercent: q.changePercent,
+            high: q.high,
+            low: q.low,
+            volume: q.volume,
+            previousClose: q.previousClose,
+            marketCap: undefined,
+            name: q.symbol,
+            symbol: q.symbol,
+          };
+        }
+      });
+      
+      return quotesMap;
+    } catch (error) {
+      console.warn('Backend API failed, falling back to individual requests:', error);
+      // Fall through to individual requests
+    }
+  }
+  
+  // Fallback to individual requests
   const results = await Promise.allSettled(
     symbols.map(async (symbol) => {
       const quote = await fetchAssetQuote(symbol);

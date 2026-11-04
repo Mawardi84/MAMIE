@@ -28,6 +28,69 @@
 
 ---
 
+## ✅ RECOMMENDED SOLUTION: tvdatafeed Backend API
+
+### Overview
+
+**tvdatafeed** adalah library Python open-source yang memungkinkan download data historis dari TradingView secara **GRATIS** tanpa perlu akun berbayar.
+
+### Why tvdatafeed?
+
+✅ **Gratis** - Tidak perlu akun TradingView berbayar  
+✅ **Reliable** - Lebih stable daripada Yahoo Finance + CORS proxy  
+✅ **No CORS Issues** - Backend implementation bypass CORS  
+✅ **Multi-Asset** - Saham, Forex, Crypto, Komoditas, Indeks  
+✅ **Multi-Timeframe** - 1min, 5min, 15min, 1H, 4H, Daily, Weekly, Monthly  
+✅ **Up to 5000 bars** - Data historis yang cukup untuk analisis  
+✅ **Caching** - Server-side caching untuk performa  
+✅ **Rate Limits** - Lebih generous daripada Yahoo Finance  
+
+### Implementation Status
+
+✅ **Backend API** - FastAPI + tvdatafeed (see `backend/` folder)  
+✅ **Frontend Integration** - Updated to use backend API with fallback  
+✅ **Symbol Mapping** - 30+ symbols mapped (MAMIE → TradingView)  
+✅ **Caching** - 5-minute cache TTL  
+✅ **Error Handling** - Graceful fallback to Yahoo Finance  
+
+### Quick Start
+
+**See:** `QUICK_START_BACKEND.md` for detailed setup instructions.
+
+```bash
+# 1. Setup Backend
+cd backend
+pip install -r requirements.txt
+python app.py
+
+# 2. Configure Frontend
+# Edit .env: VITE_API_BASE=http://localhost:8000
+
+# 3. Run Frontend
+npm run dev
+```
+
+### Architecture
+
+```
+Frontend (React)
+    ↓
+Backend API (FastAPI + tvdatafeed)
+    ↓
+TradingView Data
+    ↓
+Cache Layer (5-min TTL)
+```
+
+### Documentation
+
+- **Quick Start:** `QUICK_START_BACKEND.md`
+- **tvdatafeed Guide:** `docs/data-sources/TVDATAFEED_SOLUTION.md`
+- **Backend README:** `backend/README.md`
+- **API Documentation:** http://localhost:8000/docs (when backend is running)
+
+---
+
 ## Current Implementation
 
 ### Error Handling

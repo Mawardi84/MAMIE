@@ -1,0 +1,35 @@
+{
+  "name": "mamie-backend-tradingview",
+  "version": "1.0.0",
+  "description": "MAMIE Backend API with TradingView-API (Mathieu2301) - Real-time market data",
+  "main": "server-tradingview.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server-tradingview.js",
+    "dev": "nodemon server-tradingview.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "tradingview",
+    "market-data",
+    "real-time",
+    "stocks",
+    "crypto",
+    "forex",
+    "commodities"
+  ],
+  "author": "MAMIE Team",
+  "license": "MIT",
+  "dependencies": {
+    "@mathieuc/tradingview": "^4.1.1",
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
